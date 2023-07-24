@@ -16,7 +16,7 @@ def save_location(request):
     serializer=LocationSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
-        print(request.data)
+        print("Data Saved:",request.data)
         return Response(serializer.data)
     return Response(serializer.errors)
 
