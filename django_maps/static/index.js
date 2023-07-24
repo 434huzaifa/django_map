@@ -11,6 +11,10 @@ function success(pos) {
   const lat = pos.coords.latitude;
   const lng = pos.coords.longitude;
   const accuracy = pos.coords.accuracy;
+  markermaker(lat,lng,accuracy)
+}
+function markermaker(lat,lng,accuracy){
+
 
   console.log(lat, " ", lng, " ", accuracy);
   f = "<form>";
@@ -18,15 +22,15 @@ function success(pos) {
   f +=
     '<input type="text" name="name" id="name" required placeholder="name"><br>';
   f +=
-    '<input type="text" name="lng" id="lng" value="' +
+    '<input type="number" name="lng" id="lng" value="' +
     lng +
     '" required placeholder="Longitude"><br>';
   f +=
-    '<input type="text" name="lat" id="lat" value="' +
+    '<input type="number" name="lat" id="lat" value="' +
     lat +
     '" required placeholder="Latitude"><br>';
   f +=
-    '<input type="text" name="accuracy" id="accuracy" value="' +
+    '<input type="number" name="accuracy" id="accuracy" value="' +
     accuracy +
     '" required placeholder="Accuracy"><br>';
   f += '<button onclick="savedata()">Save</button>';
@@ -42,10 +46,10 @@ function success(pos) {
     .bindPopup(f)
     .addTo(map);
   circle = L.circle([lat, lng], { radius: accuracy }).addTo(map);
-  map.fitBounds(circle.getBounds());
-  // if (!zoomed) {
-  //   zoomed=map.fitBounds(circle.getBounds());
-  // }
+  // map.fitBounds(circle.getBounds());
+  if (!zoomed) {
+    zoomed=map.fitBounds(circle.getBounds());
+  }
 }
 function error(err) {
 if (err==1) {
@@ -126,3 +130,11 @@ function showinthemap(id){
   map.setView([lat, lng], 15);
 
 }
+
+
+
+function onMapClick(e) {
+  markermaker(e.latlng.lat,e.latlng.lng,0)
+}
+
+map.on('click', onMapClick);
