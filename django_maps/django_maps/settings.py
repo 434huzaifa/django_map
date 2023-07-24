@@ -11,12 +11,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
-from dotenv import load_dotenv
 import os
-
-load_dotenv()
-
-SECRET_KEY=os.getenv("SECRET_KEY")
+SECRET_KEY='django-insecure-re0)c4nw^(ie1#^$+g#0l1(a)_&_x^2ho#h+l_1+w&jcr!st90'
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -29,12 +25,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['*']
+ASGI_APPLICATION ="django_maps.asgi.application"
 
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -58,6 +55,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'django_maps.urls'
+
+
 
 TEMPLATES = [
     {
