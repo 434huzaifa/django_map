@@ -4,5 +4,6 @@ from django.db.models import FloatField,CharField
 class Location(models.Model):
     lng=FloatField(null=True,blank=True)
     lat=FloatField(null=True,blank=True)
-    name=CharField(null=True,blank=True)
+    accuracy=FloatField(null=True,blank=True)
+    name=CharField(null=True,blank=True,max_length=50)
     
