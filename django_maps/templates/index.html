@@ -20,6 +20,25 @@
             height: 500px;
 
         }
+        table{
+            border-collapse: collapse;
+            width: 50%;  
+            margin: auto;
+        }
+        th,td{
+            border: 1px solid black;
+            
+        }
+        th{
+            text-align: center;
+            text-shadow: 1px black;
+        }
+        td{
+            text-align: left;
+        }
+        button{
+            width: 100%;
+        }
     </style>
     <div id="map"></div>
     <input type="checkbox" name="type" id="type" value="Client" onclick="isclient()"><span>Client</span>
@@ -29,6 +48,7 @@
             <th>Longitude</th>
             <th>Latitude</th>
             <th>Accuracy</th>
+            <th>Function</th>
         </tr>
         <tbody class="row">
 

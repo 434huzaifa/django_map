@@ -6,7 +6,6 @@ L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution:
     '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
 }).addTo(map);
-navigator.geolocation.watchPosition(success, error);
 let marker,
   circle,
   zoomed,
@@ -15,6 +14,18 @@ let marker,
   other_user_circle,
   client = false;
 let lat=-999,lng=-999,accuracy=-999;
+function isclient() {
+  client = !client;
+  navigator.geolocation.watchPosition(success, error);
+  if (client==true){
+    if (other_user_marker) {
+      map.removeLayer(other_user_marker);
+      map.removeLayer(other_user_circle);
+    }
+  }
+}
+navigator.geolocation.watchPosition(success, error);
+
 function success(pos) {
   if (lat!=pos.coords.latitude) {
     if (lng != pos.coords.longitude) {
@@ -35,9 +46,7 @@ function success(pos) {
 
   markermaker(lat, lng, accuracy);
 }
-function isclient() {
-  client = !client;
-}
+
 
 function markermaker(lat, lng, accuracy) {
   f = "<form>";
