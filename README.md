@@ -18,6 +18,7 @@ A simple map using leaflet and Django rest
 - See Saved location details
 - See Saved location details on the map.
 - client and server two side
+## Preview
 ![map1](https://github.com/434huzaifa/django_map/blob/main/screenshot/map1.png)
 ![map2](https://github.com/434huzaifa/django_map/blob/main/screenshot/map2.png)
 ## Super User
