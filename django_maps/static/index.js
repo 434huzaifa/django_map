@@ -2,33 +2,44 @@ var map = L.map("map");
 map.setView([51.505, -0.09], 13); //setView([long,lat],Zoom)
 L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
+  noWrap: true,
   attribution:
     '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
 }).addTo(map);
 navigator.geolocation.watchPosition(success, error);
-let marker, circle, zoomed, locationSocket, other_user_marker,other_user_circle,client=false;
+let marker,
+  circle,
+  zoomed,
+  locationSocket,
+  other_user_marker,
+  other_user_circle,
+  client = false;
+let lat=-999,lng=-999,accuracy=-999;
 function success(pos) {
-  const lat = pos.coords.latitude;
-  const lng = pos.coords.longitude;
-  const accuracy = pos.coords.accuracy;
+  if (lat!=pos.coords.latitude) {
+    if (lng != pos.coords.longitude) {
+      lat = pos.coords.latitude;
+      lng = pos.coords.longitude;
+      accuracy = pos.coords.accuracy;
+    }
+  }
   if (client) {
     locationSocket.send(
       JSON.stringify({
-        lat: lat,
-        lng: lng,
-        accuracy: accuracy,
+        'lat': lat,
+        'lng': lng,
+        'accuracy': accuracy,
       })
     );
   }
 
   markermaker(lat, lng, accuracy);
 }
-function isclient(){
-  client=!client
+function isclient() {
+  client = !client;
 }
 
 function markermaker(lat, lng, accuracy) {
-
   f = "<form>";
   // f+='{% csrf_token %}';
   f +=
@@ -59,10 +70,10 @@ function markermaker(lat, lng, accuracy) {
     .bindPopup(f)
     .addTo(map);
   circle = L.circle([lat, lng], { radius: accuracy }).addTo(map);
-  map.fitBounds(circle.getBounds());
-  // if (!zoomed) {
-  //   zoomed=map.fitBounds(circle.getBounds());
-  // }
+  // map.fitBounds(circle.getBounds());
+  if (!zoomed) {
+    zoomed=map.fitBounds(circle.getBounds());
+  }
 }
 function error(err) {
   if (err == 1) {
@@ -87,6 +98,13 @@ function savedata() {
       console.log(data, status);
       if (status == "success") {
         // alert('Location Saved');
+        locationSocket.send(
+          JSON.stringify({
+            'lat': 'data_added',
+            'lng': 'lng',
+            'accuracy': 'accuracy',
+          })
+        );
         getdata();
       }
     });
@@ -150,13 +168,11 @@ function showinthemap(id) {
   let lat = element.getElementsByClassName("lat")[0].innerHTML;
   let lng = element.getElementsByClassName("lng")[0].innerHTML;
   let accuracy = element.getElementsByClassName("accuracy")[0].innerHTML;
-  console.log(lat, " ", lng, " ", accuracy);
-  console.log(lat);
   map.setView([lat, lng], 15);
 }
 
 function onMapClick(e) {
-  markermaker(e.latlng.lat, e.latlng.lng, 0);
+  markermaker(e.latlng.lat, e.latlng.lng, 10);
 }
 
 map.on("click", onMapClick);
@@ -165,7 +181,6 @@ function ws(params) {
   let url = `ws://${window.location.host}/ws/socket-server/`;
   locationSocket = new WebSocket(url);
   locationSocket.onmessage = function (e) {
-    
     let data = JSON.parse(e.data);
     console.log(data, "locationSocket");
     // markermaker(data['lat'],data['lng'],data['accuracy'])
@@ -175,22 +190,28 @@ function ws(params) {
       iconAnchor: [15, 15], // point of the icon which will correspond to marker's location
       popupAnchor: [0, -45], // point from which the popup should open relative to the iconAnchor
     });
-    lat=data['lat']
-    lng=data['lng']
-    accuracy=data['accuracy']
-    if (!client) {
-      if (other_user_marker) {
-        map.removeLayer(other_user_marker);
-        map.removeLayer(other_user_circle);
+    if (data["lat"] == "data_added") {
+      getdata();
+    } else {
+      lat = data["lat"];
+      lng = data["lng"];
+      accuracy = data["accuracy"];
+
+      if (!client) {
+        if (other_user_marker) {
+          map.removeLayer(other_user_marker);
+          map.removeLayer(other_user_circle);
+        }
+        other_user_marker = L.marker([lat, lng], {
+          title: data["name"],
+        })
+          .bindPopup(f)
+          .addTo(map);
+        other_user_circle = L.circle([lat, lng], { radius: accuracy }).addTo(
+          map
+        );
+        // map.fitBounds(circle.getBounds());
       }
-      other_user_marker = L.marker([lat, lng], {
-        title: data['name'],
-      })
-        .bindPopup(f)
-        .addTo(map);
-      other_user_circle = L.circle([lat, lng], { radius: accuracy }).addTo(map);
-      // map.fitBounds(circle.getBounds());
-    };
     }
-    
+  };
 }
