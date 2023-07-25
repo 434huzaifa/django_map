@@ -6,22 +6,29 @@ L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
 }).addTo(map);
 navigator.geolocation.watchPosition(success, error);
-let marker, circle, zoomed,locationSocket;
+let marker, circle, zoomed, locationSocket, other_user_marker,other_user_circle,client=false;
 function success(pos) {
   const lat = pos.coords.latitude;
   const lng = pos.coords.longitude;
   const accuracy = pos.coords.accuracy;
+  if (client) {
+    locationSocket.send(
+      JSON.stringify({
+        lat: lat,
+        lng: lng,
+        accuracy: accuracy,
+      })
+    );
+  }
 
-  markermaker(lat,lng,accuracy)
+  markermaker(lat, lng, accuracy);
 }
-function markermaker(lat,lng,accuracy){
+function isclient(){
+  client=!client
+}
 
-  locationSocket.send(JSON.stringify({
-    'lat':lat,
-    'lng':lng,
-    'accuracy':accuracy
-  }))
-  console.log(lat, " ", lng, " ", accuracy);
+function markermaker(lat, lng, accuracy) {
+
   f = "<form>";
   // f+='{% csrf_token %}';
   f +=
@@ -41,6 +48,7 @@ function markermaker(lat,lng,accuracy){
   f += '<button onclick="savedata()">Save</button>';
   // '<input id="button" type="submit" onlcick="savedata()" value="Save"><br>';
   f += "</form>";
+
   if (marker) {
     map.removeLayer(marker);
     map.removeLayer(circle);
@@ -57,11 +65,11 @@ function markermaker(lat,lng,accuracy){
   // }
 }
 function error(err) {
-if (err==1) {
-  alert('Grant Location permission')
-}else{
-  alert('Something Wrong or you are changing location from developer tool')
-}
+  if (err == 1) {
+    alert("Grant Location permission");
+  } else {
+    alert("Something Wrong or you are changing location from developer tool");
+  }
 }
 
 function savedata() {
@@ -77,7 +85,7 @@ function savedata() {
     var baseURL = "/api/save-location/";
     $.post(baseURL, deta, function (data, status) {
       console.log(data, status);
-      if (status=='success') {
+      if (status == "success") {
         // alert('Location Saved');
         getdata();
       }
@@ -87,68 +95,102 @@ function savedata() {
   form.addEventListener("submit", handleSubmit);
 }
 
-
 function getdata() {
+  const save_icon = L.icon({
+    iconUrl: save_location,
+    iconSize: [30, 30], // size of the icon
+    iconAnchor: [15, 15], // point of the icon which will correspond to marker's location
+    popupAnchor: [0, -45], // point from which the popup should open relative to the iconAnchor
+  });
   var baseURL = "/api/get-location/";
   $.get(baseURL, function (data, status) {
     // console.log(data, status);
     output = "";
     if (status == "success") {
-
       for (let index = 0; index < data.length; index++) {
         const element = data[index];
-        output += "<tr id="+element["id"]+">";
+        output += "<tr id=" + element["id"] + ">";
         output += "<td class='name'>" + element["name"] + "</td>";
         output += "<td class='lng'>" + element["lng"] + "</td>";
         output += "<td class='lat'>" + element["lat"] + "</td>";
         output += "<td class='accuracy' >" + element["accuracy"] + "</td>";
-        output += "<td><button onclick='showinthemap("+element["id"]+")'>Show</button></td>";
+        output +=
+          "<td><button onclick='showinthemap(" +
+          element["id"] +
+          ")'>Show</button></td>";
         output += "</tr>";
         L.marker([element["lat"], element["lng"]], {
           title: element["name"],
-        }).bindPopup(
-          "<h6>Name:&nbsp" +
-            element["name"] +
-            "</h6><h6>Longitude:&nbsp" +
-            element["lng"] +
-            "</h6><h6>Latitude:&nbsp" +
-            element["lat"] +
-            "</h6><h6>Accuracy:&nbsp" +
-            element["accuracy"] +
-            "</h6>"
-        ).addTo(map);
-        L.circle([element["lat"], element["lng"]], { radius: element["accuracy"] }).addTo(map);
+          icon: save_icon,
+        })
+          .bindPopup(
+            "<h6>Name:&nbsp" +
+              element["name"] +
+              "</h6><h6>Longitude:&nbsp" +
+              element["lng"] +
+              "</h6><h6>Latitude:&nbsp" +
+              element["lat"] +
+              "</h6><h6>Accuracy:&nbsp" +
+              element["accuracy"] +
+              "</h6>"
+          )
+          .addTo(map);
+        L.circle([element["lat"], element["lng"]], {
+          radius: element["accuracy"],
+        }).addTo(map);
       }
     }
-    $(".row").html(output)
+    $(".row").html(output);
   });
 }
-$(document).ready(getdata(),ws());
-function showinthemap(id){
-  let element=document.getElementById(id);
- 
-  let lat=element.getElementsByClassName('lat')[0].innerHTML;
-  let lng=element.getElementsByClassName('lng')[0].innerHTML;
-  let accuracy=element.getElementsByClassName('accuracy')[0].innerHTML;
+$(document).ready(getdata(), ws());
+function showinthemap(id) {
+  let element = document.getElementById(id);
+
+  let lat = element.getElementsByClassName("lat")[0].innerHTML;
+  let lng = element.getElementsByClassName("lng")[0].innerHTML;
+  let accuracy = element.getElementsByClassName("accuracy")[0].innerHTML;
   console.log(lat, " ", lng, " ", accuracy);
-  console.log(lat)
+  console.log(lat);
   map.setView([lat, lng], 15);
-
 }
-
-
 
 function onMapClick(e) {
-  markermaker(e.latlng.lat,e.latlng.lng,0)
+  markermaker(e.latlng.lat, e.latlng.lng, 0);
 }
 
-map.on('click', onMapClick);
+map.on("click", onMapClick);
 
 function ws(params) {
-  let url = `ws://${window.location.host}/ws/socket-server/`
-  locationSocket = new WebSocket(url)
+  let url = `ws://${window.location.host}/ws/socket-server/`;
+  locationSocket = new WebSocket(url);
   locationSocket.onmessage = function (e) {
-      let data = JSON.parse(e.data)
-      console.log(data,'locationSocket')
-  }
+    
+    let data = JSON.parse(e.data);
+    console.log(data, "locationSocket");
+    // markermaker(data['lat'],data['lng'],data['accuracy'])
+    const user_icon = L.icon({
+      iconUrl: user_locaion,
+      iconSize: [30, 30], // size of the icon
+      iconAnchor: [15, 15], // point of the icon which will correspond to marker's location
+      popupAnchor: [0, -45], // point from which the popup should open relative to the iconAnchor
+    });
+    lat=data['lat']
+    lng=data['lng']
+    accuracy=data['accuracy']
+    if (!client) {
+      if (other_user_marker) {
+        map.removeLayer(other_user_marker);
+        map.removeLayer(other_user_circle);
+      }
+      other_user_marker = L.marker([lat, lng], {
+        title: data['name'],
+      })
+        .bindPopup(f)
+        .addTo(map);
+      other_user_circle = L.circle([lat, lng], { radius: accuracy }).addTo(map);
+      // map.fitBounds(circle.getBounds());
+    };
+    }
+    
 }

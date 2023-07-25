@@ -22,7 +22,7 @@
         }
     </style>
     <div id="map"></div>
-
+    <input type="checkbox" name="type" id="type" value="Client" onclick="isclient()"><span>Client</span>
     <table>
         <tr>
             <th>Name</th>
@@ -34,14 +34,16 @@
 
         </tbody>
     </table>
+    
 
     <script src="https://code.jquery.com/jquery-3.7.0.js"
         integrity="sha256-JlqSTELeR4TLqP0OG9dxM7yDPqX1ox/HfgiSLBj8+kM=" crossorigin="anonymous"></script>
-
+<script>
+    var save_location= "{% static "save_location.png" %}";
+    var user_locaion= "{% static "user.png" %}";
+</script>
     <script src="{% static 'index.js' %}"></script>
-    <script type="text/javascript">
 
-    </script>
 
 </body>
 
