@@ -6,16 +6,21 @@ L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
 }).addTo(map);
 navigator.geolocation.watchPosition(success, error);
-let marker, circle, zoomed;
+let marker, circle, zoomed,locationSocket;
 function success(pos) {
   const lat = pos.coords.latitude;
   const lng = pos.coords.longitude;
   const accuracy = pos.coords.accuracy;
+
   markermaker(lat,lng,accuracy)
 }
 function markermaker(lat,lng,accuracy){
 
-
+  locationSocket.send(JSON.stringify({
+    'lat':lat,
+    'lng':lng,
+    'accuracy':accuracy
+  }))
   console.log(lat, " ", lng, " ", accuracy);
   f = "<form>";
   // f+='{% csrf_token %}';
@@ -46,10 +51,10 @@ function markermaker(lat,lng,accuracy){
     .bindPopup(f)
     .addTo(map);
   circle = L.circle([lat, lng], { radius: accuracy }).addTo(map);
-  // map.fitBounds(circle.getBounds());
-  if (!zoomed) {
-    zoomed=map.fitBounds(circle.getBounds());
-  }
+  map.fitBounds(circle.getBounds());
+  // if (!zoomed) {
+  //   zoomed=map.fitBounds(circle.getBounds());
+  // }
 }
 function error(err) {
 if (err==1) {
@@ -118,7 +123,7 @@ function getdata() {
     $(".row").html(output)
   });
 }
-$(document).ready(getdata());
+$(document).ready(getdata(),ws());
 function showinthemap(id){
   let element=document.getElementById(id);
  
@@ -138,3 +143,12 @@ function onMapClick(e) {
 }
 
 map.on('click', onMapClick);
+
+function ws(params) {
+  let url = `ws://${window.location.host}/ws/socket-server/`
+  locationSocket = new WebSocket(url)
+  locationSocket.onmessage = function (e) {
+      let data = JSON.parse(e.data)
+      console.log(data,'locationSocket')
+  }
+}
